@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -36,18 +37,71 @@ public class FrontController {
 	@PostMapping(consumes = "application/x-www-form-urlencoded", produces = "text/html", path = "/login")
 	// handles form submissions, validates the user object
 	// uses the AuthenticationService to authenticate the user
-	// handles errors, increments login attempts, and returns to view0 if authentication fails
-	public String loginPage(@Valid User user, BindingResult result, HttpSession session, Model model) {
+	// handles errors, increments login attempts, and returns to view0 if
+	// authentication fails
+	public String loginPage(@Valid User user, BindingResult result, HttpSession session, Model model,
+			@RequestParam(value = "captcha", required = false) String captcha,
+			@RequestParam(value = "captchaanswer", required = false) String answer) throws Exception {
+
+		// if validation has errors - return to view0
 		if (result.hasErrors()) {
 			return "view0";
 		}
 
+		// if has captcha answer + and is correct, proceed to authenticate
+		if (answer != null && answer.equals(service.checkCaptcha((String) session.getAttribute("captcha")))) {
+			try {
+				service.authenticate(user.getUsername(), user.getPassword());
+				return "view1";
+			}
+			// if there's an error with authentication, return view 0 and increment login
+			// attempt
+			catch (Exception e) {
+				loginAttempts++;
+				String errorMessage;
+				if (e.getMessage().contains("invalid payload")) {
+					errorMessage = "Invalid payload";
+				} else if (e.getMessage().contains("Incorrect username and/or password")) {
+					errorMessage = "Incorrect username and/or password";
+				} else {
+					errorMessage = "An error occured";
+				}
+				model.addAttribute("exception", errorMessage);
+				model.addAttribute("login attempts", loginAttempts);
+				return "view0";
+
+			}
+		}
+		// if has captcha answer + and is incorrect, return view 0 and increment login
+		// attempt
+		else if (answer != null && !answer.equals(service.checkCaptcha((String) session.getAttribute("captcha")))) {
+
+			String newCaptcha = service.generateCaptcha();
+			session.setAttribute("captcha", newCaptcha);
+			model.addAttribute("captcha", newCaptcha);
+			model.addAttribute("exception", "Incorrect answer, try again");
+			loginAttempts++;
+			return "view0";
+		}
+
+		// if there is no captcha (first login attempt), proceed to authenticate
 		try {
 			service.authenticate(user.getUsername(), user.getPassword());
 			return "view1";
-		} catch (Exception e) {
+		}
+		// if there's an error with authentication, return view 0 and increment login
+		// attempt
+		catch (Exception e) {
 			loginAttempts++;
-			model.addAttribute("exception", "Invalid login details");
+			String errorMessage;
+			if (e.getMessage().contains("invalid payload")) {
+				errorMessage = "Invalid payload";
+			} else if (e.getMessage().contains("Incorrect username and/or password")) {
+				errorMessage = "Incorrect username and/or password";
+			} else {
+				errorMessage = "An error occured";
+			}
+			model.addAttribute("exception", errorMessage);
 			model.addAttribute("login attempts", loginAttempts);
 			return "view0";
 

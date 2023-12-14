@@ -37,6 +37,7 @@
               size="30"
               placeholder="Please type in your username"
             />
+            <!-- to display errors -->
             <p th:errors="*{username}"></p>
             </span>
           </td>
@@ -54,9 +55,20 @@
               size="30"
               placeholder="Please type in your password"
             />
+            <!-- to display errors -->
             <p th:errors="*{password}"></p>
           </td>
         </tr>
+        <!-- to display if login attempts are more than 0 -->
+        <tr th:if="${loginAttempts > 0}">
+          <td>
+            <label for="captcha">What is </label><span th:text="${captcha}" name="captcha"></span>?
+          </td>
+          <td>
+            <input type="number" size="30" name="captchaanswer">
+          </td>
+        </tr>
+
         <tr>
           <td></td>
           <td>

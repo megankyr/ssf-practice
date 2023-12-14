@@ -1,6 +1,7 @@
 package vttp2023.batch3.ssf.frontcontroller.services;
 
 import java.net.URI;
+import java.util.Random;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -19,9 +20,12 @@ public class AuthenticationService {
 	// DO NOT CHANGE THE METHOD'S SIGNATURE
 	// Write the authentication method in here
 	public void authenticate(String username, String password) throws Exception {
-		// sends a POST request to the authentication endpoint with the provided credentials.
-		// checks the response status and throws an exception for authentication failures
-		// the success case prints a message to the console, indicating successful authentication
+		// sends a POST request to the authentication endpoint with the provided
+		// credentials.
+		// checks the response status and throws an exception for authentication
+		// failures
+		// the success case prints a message to the console, indicating successful
+		// authentication
 		User user = new User(username, password);
 		RequestEntity<String> request = RequestEntity
 				.post(new URI(url))
@@ -35,10 +39,67 @@ public class AuthenticationService {
 		if (response.getStatusCode().is2xxSuccessful()) {
 			System.out.println("Authenticated: " + username);
 		} else if (response.getStatusCode().is4xxClientError()) {
-			throw new Exception("Invalid login details");
+			if (response.getStatusCode().value() == 400) {
+				throw new Exception("Invalid payload");
+			} else if (response.getStatusCode().value() == 401) {
+				throw new Exception("Incorrect username and/or password");
+			} else {
+				throw new Exception("Invalid login details");
+			}
+
 		}
 
 	}
+
+	// generates captcha for multiple login attempts
+	public String generateCaptcha() {
+		StringBuilder captcha = new StringBuilder();
+		Random random = new Random();
+
+		int number1 = random.nextInt(1, 50);
+		int number2 = random.nextInt(1, 50);
+		String[] operations = { "+", "-", "*", "/" };
+		String operation = operations[random.nextInt(operations.length)];
+
+		captcha.append(number1);
+		captcha.append(" ");
+		captcha.append(operation);
+		captcha.append(" ");
+		captcha.append(number2);
+
+		return captcha.toString();
+	}
+
+	// provides captcha answer to check against in the controller method with the
+	// user answer
+	public String checkCaptcha(String captcha) {
+		String[] parts = captcha.split("\\s+");
+		int number1 = Integer.parseInt(parts[0]);
+		int number2 = Integer.parseInt(parts[2]);
+		String operation = parts[1];
+		int answer;
+
+		switch (operation) {
+			case "+":
+				answer = number1 + number2;
+				break;
+			case "-":
+				answer = number1 - number2;
+				break;
+			case "*":
+				answer = number1 * number2;
+				break;
+			case "/":
+				answer = number1 / number2;
+				break;
+			// insert default to meet all scenarios
+			default:
+				throw new IllegalArgumentException("Invalid operation: " + operation);
+		}
+		return String.valueOf(answer);
+	}
+
+	// copy
 
 	// TODO: Task 3
 	// DO NOT CHANGE THE METHOD'S SIGNATURE
