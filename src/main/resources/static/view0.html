@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--
+	TODO: Task 1, Task 2, Task 3
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+  </head>
+  <body>
+    <h2>Please Login</h2>
+
+	<!-- task 1: form POST request would be sent to the /login endpoint + content-type is specified in enctype
+	+ no need accept header because HTML handles that for you + added name parameters for form fields -->
+    <form
+      action="/login"
+      method="POST"
+      enctype="application/x-www-form-urlencoded"
+    >
+	
+      <table>
+        <tr>
+          <td>
+            <label for="username">Username:</label>
+          </td>
+          <td>
+            <input
+              type="text"
+              id="username"
+			  name="username"
+              size="30"
+              placeholder="Please type in your username"
+            />
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="password">Password:</label>
+          </td>
+          <td>
+            <input
+              type="password"
+              id="password"
+			  name="password"
+              size="30"
+              placeholder="Please type in your password"
+            />
+          </td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>
+            <button>Login</button>
+          </td>
+        </tr>
+      </table>
+    </form>
+  </body>
+</html>
