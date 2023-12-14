@@ -48,6 +48,11 @@ public class FrontController {
 			return "view0";
 		}
 
+		// check if the user is disabled before each login attempt
+		if (service.isUserDisabled(user.getUsername())) {
+			model.addAttribute("username", user.getUsername());
+			return "view2";
+		}
 		// if has captcha answer + and is correct, proceed to authenticate
 		if (answer != null && answer.equals(service.checkCaptcha((String) session.getAttribute("captcha")))) {
 			try {
@@ -55,9 +60,14 @@ public class FrontController {
 				return "view1";
 			}
 			// if there's an error with authentication, return view 0 and increment login
-			// attempt
+			// if there are 3 login attempts, then disable user
 			catch (Exception e) {
 				loginAttempts++;
+				if (loginAttempts == 3) {
+					service.disableUser(user.getUsername());
+					model.addAttribute("username", user.getUsername());
+					return "view2";
+				}
 				String errorMessage;
 				if (e.getMessage().contains("invalid payload")) {
 					errorMessage = "Invalid payload";
@@ -103,6 +113,7 @@ public class FrontController {
 			}
 			model.addAttribute("exception", errorMessage);
 			model.addAttribute("login attempts", loginAttempts);
+
 			return "view0";
 
 		}
